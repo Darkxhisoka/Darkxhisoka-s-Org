@@ -1,5 +1,6 @@
 import React from 'react';
 import { SaleTransaction, StoreLocation } from '../../types';
+import { printThermalDocument, generatePosReceiptHtml } from '../../utils/thermalPrinter';
 import {
   Printer,
   X,
@@ -26,7 +27,23 @@ export const SaleReceiptModal: React.FC<SaleReceiptModalProps> = ({
   onClose,
 }) => {
   const handlePrint = () => {
-    window.print();
+    const html = generatePosReceiptHtml({
+      storeName: sale.storeName,
+      receiptNumber: sale.transactionNumber,
+      cashierName: sale.cashierName,
+      date: sale.timestamp,
+      items: sale.items.map(i => ({
+        name: i.productName,
+        quantity: i.quantity,
+        unitPrice: i.unitPrice,
+        total: i.totalPrice
+      })),
+      subtotal: sale.subtotal,
+      tax: sale.tax,
+      total: sale.totalAmount,
+      paymentMethod: sale.paymentMethod
+    });
+    printThermalDocument(html, `Ticket-${sale.transactionNumber}`);
   };
 
   const formattedDate = new Date(sale.timestamp).toLocaleString('en-US', {

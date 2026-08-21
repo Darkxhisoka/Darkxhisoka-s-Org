@@ -756,306 +756,459 @@ export const RecipeCosting: React.FC = () => {
 
       {/* Add / Edit Recipe Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-xl border border-slate-200 space-y-4 my-8">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <ChefHat className="w-5 h-5 text-amber-600" />
-                {editingRecipe
-                  ? 'Edit Recipe'
-                  : recipeType === 'SEMI_FINISHED'
-                  ? 'Create New Semi-Finished Component Recipe'
-                  : 'Create New Finished Pastry Recipe'}
-              </h3>
-              <button
-                onClick={() => setShowModal(false)}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-hidden">
+          <div className="bg-white rounded-2xl sm:rounded-3xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <form onSubmit={handleSubmit} className="flex flex-col h-full max-h-[90vh] overflow-hidden">
               
-              {/* Recipe Type Switcher */}
-              <div className="bg-slate-50 p-2 rounded-xl border border-slate-200 flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRecipeType('FINISHED');
-                    if (recipeCategory === 'Creams & Fillings') setRecipeCategory('Viennoiserie');
-                  }}
-                  className={`flex-1 py-2 text-xs font-bold rounded-lg border transition-all ${
-                    recipeType === 'FINISHED'
-                      ? 'bg-amber-600 text-white border-amber-600 shadow-2xs'
-                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
-                  }`}
-                >
-                  ✨ Finished Product Recipe
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRecipeType('SEMI_FINISHED');
-                    setRecipeCategory('Creams & Fillings');
-                    setSuggestedSellingPrice(0);
-                  }}
-                  className={`flex-1 py-2 text-xs font-bold rounded-lg border transition-all ${
-                    recipeType === 'SEMI_FINISHED'
-                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs'
-                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
-                  }`}
-                >
-                  🥐 Semi-Finished Component Base
-                </button>
-              </div>
-
-              {/* Basic Fields */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Recipe Name</label>
-                    <input
-                      type="text"
-                      required
-                      value={recipeName}
-                      onChange={(e) => setRecipeName(e.target.value)}
-                      placeholder={recipeType === 'SEMI_FINISHED' ? 'e.g. Vanilla Bean Crème Pâtissière' : 'e.g. Croissant au Beurre (AOP)'}
-                      className="w-full text-xs font-medium bg-slate-50 text-slate-900 rounded-lg p-2.5 border border-slate-300 focus:ring-2 focus:ring-amber-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Category</label>
-                    <select
-                      value={recipeCategory}
-                      onChange={(e) => setRecipeCategory(e.target.value)}
-                      className="w-full text-xs font-medium bg-slate-50 text-slate-900 rounded-lg p-2.5 border border-slate-300 focus:ring-2 focus:ring-amber-500 cursor-pointer"
-                    >
-                      <option value="Viennoiserie">Viennoiserie</option>
-                      <option value="Pâtisserie">Pâtisserie</option>
-                      <option value="Creams & Fillings">Creams & Fillings</option>
-                      <option value="Dough & Bases">Dough & Bases</option>
-                      <option value="Gâteaux & Cakes">Gâteaux & Cakes</option>
-                      <option value="Tarts & Pies">Tarts & Pies</option>
-                      <option value="Savoury">Savoury</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Batch Yield Quantity</label>
-                  <input
-                    type="number"
-                    min="0.1"
-                    step="0.1"
-                    required
-                    value={yieldUnits}
-                    onChange={(e) => setYieldUnits(Number(e.target.value))}
-                    className="w-full text-xs font-medium bg-slate-50 text-slate-900 rounded-lg p-2.5 border border-slate-300 focus:ring-2 focus:ring-amber-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Yield Unit Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={unitName}
-                    onChange={(e) => setUnitName(e.target.value)}
-                    placeholder="kg, pieces, L, trays"
-                    className="w-full text-xs font-medium bg-slate-50 text-slate-900 rounded-lg p-2.5 border border-slate-300 focus:ring-2 focus:ring-amber-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Prep Time (minutes)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={prepTimeMinutes}
-                    onChange={(e) => setPrepTimeMinutes(Number(e.target.value))}
-                    className="w-full text-xs font-medium bg-slate-50 text-slate-900 rounded-lg p-2.5 border border-slate-300 focus:ring-2 focus:ring-amber-500"
-                  />
-                </div>
-
-                {recipeType === 'FINISHED' && (
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Suggested Retail Price (DZD)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={suggestedSellingPrice}
-                      onChange={(e) => setSuggestedSellingPrice(Number(e.target.value))}
-                      className="w-full text-xs font-medium bg-slate-50 text-slate-900 rounded-lg p-2.5 border border-slate-300 focus:ring-2 focus:ring-amber-500"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Dynamic Ingredients Section */}
-              <div className="space-y-3 pt-2 border-t border-slate-100">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-800">
-                    Recipe Ingredients (Raw Materials & Sub-Recipes) ({ingredients.length})
-                  </label>
-                  <button
-                    type="button"
-                    onClick={handleAddIngredientLine}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-lg transition-colors"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> Add Ingredient
-                  </button>
-                </div>
-
-                <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-                  {ingredients.map((ing, idx) => {
-                    const isSemi = ing.type === 'SEMI_FINISHED';
-                    const line = getIngredientLineCost(ing);
-
-                    return (
-                      <div key={idx} className="flex flex-col sm:flex-row sm:items-center gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                        {/* Type selector */}
-                        <div className="w-full sm:w-36">
-                          <select
-                            value={ing.type || 'RAW_MATERIAL'}
-                            onChange={(e) => handleIngredientChange(idx, 'type', e.target.value)}
-                            className="w-full text-[11px] font-bold bg-white text-slate-800 rounded-lg p-1.5 border border-slate-300 focus:ring-2 focus:ring-amber-500 cursor-pointer"
-                          >
-                            <option value="RAW_MATERIAL">Raw Material</option>
-                            <option value="SEMI_FINISHED">Sub-Recipe Base</option>
-                          </select>
-                        </div>
-
-                        {/* Item selector */}
-                        <div className="flex-1">
-                          {isSemi ? (
-                            <select
-                              value={ing.semiFinishedRecipeId || ''}
-                              onChange={(e) => handleIngredientChange(idx, 'semiFinishedRecipeId', e.target.value)}
-                              className="w-full text-xs font-medium bg-white text-slate-900 rounded-lg p-1.5 border border-slate-300 focus:ring-2 focus:ring-amber-500 cursor-pointer"
-                            >
-                              {semiFinishedRecipesList.map((sf) => {
-                                const sfCost = getRecipeUnitCost(sf, recipes, rawMaterials);
-                                return (
-                                  <option key={sf.id} value={sf.id}>
-                                    🥐 {sf.name} ({sfCost.toFixed(2)} DZD/{sf.unitName})
-                                  </option>
-                                );
-                              })}
-                            </select>
-                          ) : (
-                            <select
-                              value={ing.rawMaterialId || ''}
-                              onChange={(e) => handleIngredientChange(idx, 'rawMaterialId', e.target.value)}
-                              className="w-full text-xs font-medium bg-white text-slate-900 rounded-lg p-1.5 border border-slate-300 focus:ring-2 focus:ring-amber-500 cursor-pointer"
-                            >
-                              {rawMaterials.map((m) => (
-                                <option key={m.id} value={m.id}>
-                                  📦 {m.name} ({m.currentAvgCost.toFixed(2)} DZD/{m.unit})
-                                </option>
-                              ))}
-                            </select>
-                          )}
-                        </div>
-
-                        {/* Quantity input */}
-                        <div className="w-28 flex items-center gap-1">
-                          <input
-                            type="number"
-                            step="0.1"
-                            min="0.01"
-                            required
-                            value={ing.quantity}
-                            onChange={(e) => handleIngredientChange(idx, 'quantity', Number(e.target.value))}
-                            className="w-full text-xs font-bold bg-white text-slate-900 rounded-lg p-1.5 border border-slate-300 focus:ring-2 focus:ring-amber-500 text-center"
-                          />
-                          <span className="text-[11px] text-slate-500 font-medium shrink-0">
-                            {line.unit}
-                          </span>
-                        </div>
-
-                        {/* Calculated Line Cost */}
-                        <div className="w-20 text-right pr-2 shrink-0">
-                          <span className="text-xs font-extrabold text-slate-900">{line.totalCost.toFixed(2)} DZD</span>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveIngredientLine(idx)}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors shrink-0"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Live Cost Calculation Bar in Modal */}
-              <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-3 grid grid-cols-3 gap-2 text-center text-xs">
-                <div>
-                  <span className="text-[10px] text-slate-500 font-semibold block">Estimated Batch COGS</span>
-                  <strong className="text-sm font-extrabold text-slate-900">{modalBatchCost.toFixed(2)} DZD</strong>
-                </div>
-                <div>
-                  <span className="text-[10px] text-indigo-600 font-semibold block">Calculated Unit Cost</span>
-                  <strong className="text-sm font-extrabold text-indigo-800">{modalCostPerUnit.toFixed(2)} DZD / {unitName}</strong>
-                </div>
-                <div>
-                  <span className="text-[10px] text-emerald-600 font-semibold block">
-                    {recipeType === 'FINISHED' ? 'Est. Gross Margin %' : 'Component Type'}
-                  </span>
-                  <strong className="text-sm font-extrabold text-emerald-800">
-                    {recipeType === 'FINISHED' ? `${modalMarginPct.toFixed(1)}%` : 'Sub-Recipe Component'}
-                  </strong>
-                </div>
-              </div>
-
-              {/* Instructions */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs font-semibold text-slate-700">Prep & Baking Instructions</label>
-                  <button
-                    type="button"
-                    onClick={toggleInstructionsDictation}
-                    className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                      isDictating
-                        ? 'bg-rose-600 text-white animate-pulse'
-                        : 'bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300'
+              {/* STICKY HEADER */}
+              <div className="sticky top-0 z-10 bg-white px-5 sm:px-6 py-4 border-b border-slate-200 flex items-center justify-between gap-4 shrink-0 shadow-xs">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className={`p-2.5 rounded-xl border shrink-0 ${
+                      recipeType === 'SEMI_FINISHED'
+                        ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                        : 'bg-amber-50 text-amber-700 border-amber-200'
                     }`}
                   >
-                    {isDictating ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3 text-amber-700" />}
-                    <span>{isDictating ? 'Arrêter la dictée' : '🎙️ Dicter les consignes'}</span>
-                  </button>
+                    <ChefHat className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-base sm:text-lg font-bold text-slate-900 truncate">
+                        {editingRecipe
+                          ? `Modifier la Fiche : ${editingRecipe.name}`
+                          : recipeType === 'SEMI_FINISHED'
+                          ? 'Nouvelle Fiche de Production (Semi-Fini)'
+                          : 'Nouvelle Fiche de Production (Produit Fini)'}
+                      </h3>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border uppercase tracking-wider ${
+                          recipeType === 'SEMI_FINISHED'
+                            ? 'bg-indigo-100 text-indigo-800 border-indigo-300'
+                            : 'bg-amber-100 text-amber-800 border-amber-300'
+                        }`}
+                      >
+                        {recipeType === 'SEMI_FINISHED' ? 'Composant Base' : 'Pâtisserie Finie'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 truncate mt-0.5">
+                      Fiche technique, ingrédients de nomenclature & calcul automatique du coût de revient
+                    </p>
+                  </div>
                 </div>
-                <textarea
-                  rows={3}
-                  value={instructions}
-                  onChange={(e) => setInstructions(e.target.value)}
-                  placeholder="e.g. Scald cream with vanilla bean. Whisk yolks with sugar and flour..."
-                  className="w-full text-xs font-medium bg-slate-50 text-slate-900 rounded-lg p-2.5 border border-slate-300 focus:ring-2 focus:ring-amber-500"
-                />
-              </div>
 
-              {/* Submit Buttons */}
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg"
+                  className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors shrink-0 touch-manipulation"
+                  title="Fermer la modal"
                 >
-                  Cancel
+                  <X className="w-5 h-5" />
                 </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-lg shadow-xs"
-                >
-                  {editingRecipe ? 'Save Changes' : 'Save Recipe'}
-                </button>
+              </div>
+
+              {/* SCROLLABLE FORM CONTENT */}
+              <div className="flex-1 overflow-y-auto px-5 sm:px-6 py-5 space-y-5 bg-slate-50/40">
+                
+                {/* 1. Recipe Type Switcher */}
+                <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Type de Fiche de Production
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRecipeType('FINISHED');
+                        if (recipeCategory === 'Creams & Fillings') setRecipeCategory('Viennoiserie');
+                      }}
+                      className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${
+                        recipeType === 'FINISHED'
+                          ? 'bg-amber-50 border-amber-500 text-amber-950 ring-2 ring-amber-500/20 shadow-2xs'
+                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div
+                        className={`p-2.5 rounded-lg shrink-0 ${
+                          recipeType === 'FINISHED' ? 'bg-amber-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-600'
+                        }`}
+                      >
+                        <Sparkles className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="font-bold text-xs block text-slate-900">✨ Produit Fini / Vente</span>
+                        <span className="text-[11px] text-slate-500 block truncate">Destiné à la vente directe en boutique</span>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRecipeType('SEMI_FINISHED');
+                        setRecipeCategory('Creams & Fillings');
+                        setSuggestedSellingPrice(0);
+                      }}
+                      className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${
+                        recipeType === 'SEMI_FINISHED'
+                          ? 'bg-indigo-50 border-indigo-500 text-indigo-950 ring-2 ring-indigo-500/20 shadow-2xs'
+                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div
+                        className={`p-2.5 rounded-lg shrink-0 ${
+                          recipeType === 'SEMI_FINISHED' ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-600'
+                        }`}
+                      >
+                        <Layers className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="font-bold text-xs block text-slate-900">🥐 Base Semi-Finie / Composant</span>
+                        <span className="text-[11px] text-slate-500 block truncate">Crème, pâte, garniture stockée au labo</span>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 2. General Information Responsive Grid */}
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
+                  <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <ChefHat className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Paramètres & Informations de la Recette</span>
+                  </h4>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Recipe Name */}
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                        Nom de la Recette / Produit <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={recipeName}
+                        onChange={(e) => setRecipeName(e.target.value)}
+                        placeholder={
+                          recipeType === 'SEMI_FINISHED'
+                            ? 'ex. Crème Pâtissière Vanille Bourbon'
+                            : 'ex. Croissant Pur Beurre AOP'
+                        }
+                        className="w-full text-xs font-semibold bg-slate-50 text-slate-900 rounded-xl p-3 border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all min-h-[44px]"
+                      />
+                    </div>
+
+                    {/* Category */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                        Catégorie de Recette
+                      </label>
+                      <select
+                        value={recipeCategory}
+                        onChange={(e) => setRecipeCategory(e.target.value)}
+                        className="w-full text-xs font-semibold bg-slate-50 text-slate-900 rounded-xl p-3 border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all min-h-[44px] cursor-pointer"
+                      >
+                        <option value="Viennoiserie">Viennoiserie</option>
+                        <option value="Pâtisserie">Pâtisserie</option>
+                        <option value="Creams & Fillings">Crèmes & Garnitures</option>
+                        <option value="Dough & Bases">Pâtes & Fonds de Tarte</option>
+                        <option value="Gâteaux & Cakes">Gâteaux & Entremets</option>
+                        <option value="Tarts & Pies">Tartes & Tartelettes</option>
+                        <option value="Savoury">Salé & Traiteur</option>
+                      </select>
+                    </div>
+
+                    {/* Batch Yield Quantity */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                        Rendement par Lot (Quantité Produite) <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        min="0.1"
+                        step="0.1"
+                        required
+                        value={yieldUnits}
+                        onChange={(e) => setYieldUnits(Number(e.target.value))}
+                        className="w-full text-xs font-semibold bg-slate-50 text-slate-900 rounded-xl p-3 border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all min-h-[44px]"
+                      />
+                    </div>
+
+                    {/* Yield Unit Name */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                        Unité de Mesure du Lot <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={unitName}
+                        onChange={(e) => setUnitName(e.target.value)}
+                        placeholder="pièces, kg, litres, plaques..."
+                        className="w-full text-xs font-semibold bg-slate-50 text-slate-900 rounded-xl p-3 border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all min-h-[44px]"
+                      />
+                    </div>
+
+                    {/* Prep Time */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                        Temps de Préparation & Cuisson (minutes)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={prepTimeMinutes}
+                        onChange={(e) => setPrepTimeMinutes(Number(e.target.value))}
+                        placeholder="ex. 120"
+                        className="w-full text-xs font-semibold bg-slate-50 text-slate-900 rounded-xl p-3 border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all min-h-[44px]"
+                      />
+                    </div>
+
+                    {/* Suggested Retail Price (if Finished) */}
+                    {recipeType === 'FINISHED' && (
+                      <div className="md:col-span-2">
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                          Prix de Vente Conseillé Boutique (DZD TTC / unité)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={suggestedSellingPrice}
+                          onChange={(e) => setSuggestedSellingPrice(Number(e.target.value))}
+                          className="w-full text-xs font-semibold bg-slate-50 text-slate-900 rounded-xl p-3 border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all min-h-[44px]"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* 3. Ingredients & Sub-Recipes Section */}
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
+                  <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-slate-100">
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                        <Box className="w-3.5 h-3.5 text-amber-600" />
+                        <span>Composition & Nomenclature ({ingredients.length} ingrédient{ingredients.length > 1 ? 's' : ''})</span>
+                      </h4>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Matières premières et sous-recettes semi-finies composant ce lot
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleAddIngredientLine}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 active:bg-amber-300 border border-amber-300 px-3 py-2 rounded-xl transition-all shadow-2xs touch-manipulation cursor-pointer"
+                    >
+                      <Plus className="w-4 h-4" /> Ajouter un Ingrédient
+                    </button>
+                  </div>
+
+                  {ingredients.length === 0 ? (
+                    <div className="p-6 text-center rounded-xl bg-slate-50 border border-dashed border-slate-300 space-y-2">
+                      <Box className="w-8 h-8 text-slate-400 mx-auto" />
+                      <p className="text-xs font-semibold text-slate-600">Aucun ingrédient dans cette recette</p>
+                      <button
+                        type="button"
+                        onClick={handleAddIngredientLine}
+                        className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 bg-white border border-slate-300 px-3 py-1.5 rounded-lg hover:bg-slate-50"
+                      >
+                        <Plus className="w-3.5 h-3.5" /> Ajouter le premier ingrédient
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {ingredients.map((ing, idx) => {
+                        const isSemi = ing.type === 'SEMI_FINISHED';
+                        const line = getIngredientLineCost(ing);
+
+                        return (
+                          <div
+                            key={idx}
+                            className="p-3 bg-slate-50/80 rounded-xl border border-slate-200 hover:border-slate-300 transition-colors"
+                          >
+                            <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center">
+                              {/* Type selector */}
+                              <div className="sm:col-span-3">
+                                <label className="sm:hidden text-[10px] font-bold text-slate-500 mb-1 block">Type</label>
+                                <select
+                                  value={ing.type || 'RAW_MATERIAL'}
+                                  onChange={(e) => handleIngredientChange(idx, 'type', e.target.value)}
+                                  className="w-full text-xs font-bold bg-white text-slate-800 rounded-lg p-2 border border-slate-300 focus:ring-2 focus:ring-amber-500 cursor-pointer min-h-[38px]"
+                                >
+                                  <option value="RAW_MATERIAL">📦 Matière Première</option>
+                                  <option value="SEMI_FINISHED">🥐 Base Semi-Finie</option>
+                                </select>
+                              </div>
+
+                              {/* Item selector */}
+                              <div className="sm:col-span-4">
+                                <label className="sm:hidden text-[10px] font-bold text-slate-500 mb-1 block">Article / Recette</label>
+                                {isSemi ? (
+                                  <select
+                                    value={ing.semiFinishedRecipeId || ''}
+                                    onChange={(e) => handleIngredientChange(idx, 'semiFinishedRecipeId', e.target.value)}
+                                    className="w-full text-xs font-medium bg-white text-slate-900 rounded-lg p-2 border border-slate-300 focus:ring-2 focus:ring-amber-500 cursor-pointer min-h-[38px]"
+                                  >
+                                    {semiFinishedRecipesList.length === 0 ? (
+                                      <option value="">Aucune base semi-finie disponible</option>
+                                    ) : (
+                                      semiFinishedRecipesList.map((sf) => {
+                                        const sfCost = getRecipeUnitCost(sf, recipes, rawMaterials);
+                                        return (
+                                          <option key={sf.id} value={sf.id}>
+                                            {sf.name} ({sfCost.toFixed(2)} DZD/{sf.unitName})
+                                          </option>
+                                        );
+                                      })
+                                    )}
+                                  </select>
+                                ) : (
+                                  <select
+                                    value={ing.rawMaterialId || ''}
+                                    onChange={(e) => handleIngredientChange(idx, 'rawMaterialId', e.target.value)}
+                                    className="w-full text-xs font-medium bg-white text-slate-900 rounded-lg p-2 border border-slate-300 focus:ring-2 focus:ring-amber-500 cursor-pointer min-h-[38px]"
+                                  >
+                                    {rawMaterials.map((m) => (
+                                      <option key={m.id} value={m.id}>
+                                        {m.name} ({m.currentAvgCost.toFixed(2)} DZD/{m.unit})
+                                      </option>
+                                    ))}
+                                  </select>
+                                )}
+                              </div>
+
+                              {/* Quantity & Unit */}
+                              <div className="sm:col-span-2">
+                                <label className="sm:hidden text-[10px] font-bold text-slate-500 mb-1 block">Quantité ({line.unit})</label>
+                                <div className="flex items-center gap-1.5">
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0.001"
+                                    required
+                                    value={ing.quantity}
+                                    onChange={(e) => handleIngredientChange(idx, 'quantity', Number(e.target.value))}
+                                    className="w-full text-xs font-bold bg-white text-slate-900 rounded-lg p-2 border border-slate-300 focus:ring-2 focus:ring-amber-500 text-center min-h-[38px]"
+                                  />
+                                  <span className="text-[11px] font-bold text-slate-600 shrink-0 w-8 truncate">
+                                    {line.unit}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Calculated Cost Preview */}
+                              <div className="sm:col-span-2 text-right">
+                                <label className="sm:hidden text-[10px] font-bold text-slate-500 mb-1 block text-left">Coût Ligne</label>
+                                <span className="text-xs font-black text-slate-900 block truncate">
+                                  {line.totalCost.toFixed(2)} DZD
+                                </span>
+                                <span className="text-[10px] text-slate-500 block truncate">
+                                  @{line.unitCost.toFixed(2)} / {line.unit}
+                                </span>
+                              </div>
+
+                              {/* Action Delete */}
+                              <div className="sm:col-span-1 flex justify-end">
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveIngredientLine(idx)}
+                                  className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors shrink-0 touch-manipulation"
+                                  title="Supprimer la ligne"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* 4. Live Cost Calculation Card */}
+                <div className="bg-gradient-to-br from-amber-50/90 to-amber-100/60 border border-amber-200 rounded-2xl p-4 shadow-2xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
+                    <div className="bg-white/80 p-3 rounded-xl border border-amber-200/80">
+                      <span className="text-[11px] text-slate-600 font-bold uppercase tracking-wider block">Coût Total Matières (Lot)</span>
+                      <strong className="text-base sm:text-lg font-black text-slate-900 block mt-0.5">
+                        {modalBatchCost.toFixed(2)} DZD
+                      </strong>
+                    </div>
+
+                    <div className="bg-white/80 p-3 rounded-xl border border-amber-200/80">
+                      <span className="text-[11px] text-indigo-700 font-bold uppercase tracking-wider block">Coût Unitaire de Revient</span>
+                      <strong className="text-base sm:text-lg font-black text-indigo-900 block mt-0.5">
+                        {modalCostPerUnit.toFixed(2)} DZD <span className="text-xs font-semibold text-indigo-600">/ {unitName}</span>
+                      </strong>
+                    </div>
+
+                    <div className="bg-white/80 p-3 rounded-xl border border-amber-200/80">
+                      <span className="text-[11px] text-emerald-700 font-bold uppercase tracking-wider block">
+                        {recipeType === 'FINISHED' ? 'Marge Brute Estimée' : 'Type de Composant'}
+                      </span>
+                      <strong className="text-base sm:text-lg font-black text-emerald-900 block mt-0.5">
+                        {recipeType === 'FINISHED' ? `${modalMarginPct.toFixed(1)}%` : 'Sous-Recette Intermédiaire'}
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 5. Instructions & Voice Dictation Section */}
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <BookOpen className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Consignes de Préparation & Cuisson</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={toggleInstructionsDictation}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer touch-manipulation ${
+                        isDictating
+                          ? 'bg-rose-600 text-white animate-pulse shadow-xs'
+                          : 'bg-amber-50 hover:bg-amber-100 active:bg-amber-200 text-amber-900 border border-amber-300'
+                      }`}
+                    >
+                      {isDictating ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5 text-amber-700" />}
+                      <span>{isDictating ? 'Arrêter la dictée vocale' : '🎙️ Dictée vocale mains-libres'}</span>
+                    </button>
+                  </div>
+                  <textarea
+                    rows={4}
+                    value={instructions}
+                    onChange={(e) => setInstructions(e.target.value)}
+                    placeholder="ex. Faire chauffer le lait avec la gousse de vanille. Blanchir les jaunes avec le sucre puis incorporer la maïzena..."
+                    className="w-full text-xs font-medium bg-slate-50 text-slate-900 rounded-xl p-3 border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all leading-relaxed"
+                  />
+                </div>
+
+              </div>
+
+              {/* STICKY ACTION BUTTONS FOOTER */}
+              <div className="sticky bottom-0 z-10 bg-white px-5 sm:px-6 py-3.5 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 shadow-xs">
+                <div className="text-xs text-slate-500 flex items-center gap-2">
+                  <span>Lot : <strong className="text-slate-800">{yieldUnits} {unitName}</strong></span>
+                  <span>•</span>
+                  <span>Coût unitaire : <strong className="text-indigo-700 font-bold">{modalCostPerUnit.toFixed(2)} DZD</strong></span>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setShowModal(false)}
+                    className="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl border border-slate-200 transition-colors min-h-[40px] touch-manipulation cursor-pointer"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 active:bg-amber-800 rounded-xl shadow-xs transition-colors min-h-[40px] touch-manipulation cursor-pointer"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    {editingRecipe ? 'Enregistrer les Modifications' : 'Enregistrer la Fiche de Production'}
+                  </button>
+                </div>
               </div>
 
             </form>
@@ -1065,18 +1218,32 @@ export const RecipeCosting: React.FC = () => {
 
       {/* Production Runner Modal Overlay */}
       {showRunnerModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-slate-100 rounded-3xl border border-slate-300 max-w-5xl w-full p-6 shadow-2xl relative my-8 max-h-[90vh] overflow-y-auto">
-            <button
-              onClick={() => setShowRunnerModal(false)}
-              className="absolute top-6 right-6 p-2 rounded-xl bg-slate-200 text-slate-700 hover:bg-slate-300 font-bold text-xs"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <ProductionRunner
-              initialRecipeId={selectedRecipeId}
-              onCloseModal={() => setShowRunnerModal(false)}
-            />
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-hidden">
+          <div className="bg-slate-100 rounded-2xl sm:rounded-3xl border border-slate-300 max-w-5xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden relative animate-in fade-in zoom-in-95 duration-150">
+            <div className="sticky top-0 z-10 bg-slate-900 text-white px-5 sm:px-6 py-4 flex items-center justify-between gap-4 shrink-0 shadow-xs">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 shrink-0">
+                  <Zap className="w-5 h-5 fill-amber-400" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-base font-bold truncate">Lancement de Production & Cascade BOM</h3>
+                  <p className="text-xs text-slate-400 truncate">Déduction automatique des matières et fabrication des sous-recettes</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowRunnerModal(false)}
+                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-colors touch-manipulation"
+                title="Fermer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+              <ProductionRunner
+                initialRecipeId={selectedRecipeId}
+                onCloseModal={() => setShowRunnerModal(false)}
+              />
+            </div>
           </div>
         </div>
       )}

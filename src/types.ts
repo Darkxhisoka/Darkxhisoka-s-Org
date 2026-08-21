@@ -503,11 +503,26 @@ export type BatchStatus = 'PLANNED' | 'IN_PREPARATION' | 'BAKING' | 'READY_FOR_P
 
 export interface ProductionBatch {
   id: string;
-  batchNumber: number;
-  size: number;
+  batchNumber: string;
+  recipeId?: string;
+  recipeName: string;
+  plannedQuantity: number;
+  actualQuantity?: number;
+  unit?: string;
+  productionDate: string;
+  expiryDate?: string;
+  supervisorName?: string;
   status: BatchStatus;
+  size?: number;
   updatedAt?: string;
   bakerName?: string;
+  notes?: string;
+  ingredientsUsed?: Array<{
+    materialId: string;
+    materialName: string;
+    quantityDeducted: number;
+    unit: string;
+  }>;
 }
 
 export interface MasterProductionItem {

@@ -10,6 +10,7 @@ import { ProtectedRoute } from './components/common/ProtectedRoute';
 import { LoginModal } from './components/common/LoginModal';
 import { LoadingScreen } from './components/common/LoadingScreen';
 import { initBackgroundSync } from './services/backgroundSync';
+import { useDesktopShortcuts } from './hooks/useDesktopShortcuts';
 import { supabase } from './lib/supabaseClient';
 import { 
   getActiveRole, 
@@ -34,9 +35,24 @@ export default function App() {
   });
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
 
+  // Global desktop keyboard shortcuts (Ctrl+N, Ctrl+F, Esc, Ctrl+P)
+  useDesktopShortcuts({
+    onCloseModals: () => setIsLoginModalOpen(false)
+  });
+
   useEffect(() => {
     // 0. Initialize automatic background sync service
     initBackgroundSync();
+
+    // Notify Capgo update engine of successful boot
+    (async () => {
+      try {
+        const { CapacitorUpdater } = await import('@capgo/capacitor-updater');
+        await CapacitorUpdater.notifyAppReady();
+      } catch {
+        // Non-Capacitor environment safe fallback
+      }
+    })();
 
     // 1. Check Supabase Auth active session on mount & initial app readiness
     const initApp = async () => {

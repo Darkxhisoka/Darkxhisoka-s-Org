@@ -1,6 +1,5 @@
 import express from "express";
 import path from "path";
-import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 
 async function startServer() {
@@ -8,6 +7,15 @@ async function startServer() {
   const PORT = 3000;
 
   app.use(express.json({ limit: "10mb" }));
+
+  // Health check endpoints for Cloud Run ingress and container probes
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+
+  app.get("/healthz", (req, res) => {
+    res.status(200).send("OK");
+  });
 
   // API Endpoint for Lab Contextual Assistant Chatbot
   app.post("/api/chat", async (req, res) => {
@@ -103,6 +111,7 @@ Contexte actuel fourni par l'utilisateur: ${context || 'Utilisateur dans l\'inte
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",

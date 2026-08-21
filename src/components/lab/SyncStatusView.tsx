@@ -50,9 +50,11 @@ import {
   Flame,
   Activity,
   Copy,
-  ExternalLink
+  ExternalLink,
+  Smartphone
 } from 'lucide-react';
 import { notifyToast, getRawMaterials } from '../../services/storage';
+import { checkForLiveUpdatesManual } from '../../services/liveUpdates';
 import {
   subscribeBackgroundSync,
   triggerBackgroundSync,
@@ -1046,6 +1048,34 @@ export const SyncStatusView: React.FC = () => {
           )}
         </div>
 
+      </div>
+
+      {/* Capgo Live Updates (OTA) Card */}
+      <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-5">
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 shrink-0">
+            <Smartphone className="w-6 h-6" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
+              Mises à jour directes Capgo (OTA Live Updates)
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                Auto-Update Actif
+              </span>
+            </h3>
+            <p className="text-xs text-slate-400 leading-relaxed max-w-2xl">
+              Permet de déployer instantanément les nouvelles versions du frontend sans repasser par le Play Store / App Store. Les mises à jour sont automatiquement téléchargées au lancement de l'application.
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => checkForLiveUpdatesManual()}
+          className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-semibold shadow-lg shadow-cyan-600/20 flex items-center gap-2 transition-all shrink-0 active:scale-95"
+        >
+          <RefreshCw className="w-4 h-4" />
+          <span>Vérifier les Mises à Jour OTA</span>
+        </button>
       </div>
 
       {/* Offline Data Integrity & Dual Architecture Architecture Info Box */}

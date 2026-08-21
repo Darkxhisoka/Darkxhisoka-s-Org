@@ -4,10 +4,15 @@ import {
   getRecipes,
   getRequisitions,
   getReceipts,
+  getProductionBatches,
   subscribeToStoreChanges
 } from '../../services/storage';
 import { RawMaterial, Recipe, Requisition } from '../../types';
 import { WeeklyProductionTrendsChart } from './WeeklyProductionTrendsChart';
+import {
+  exportProductionBatchesToPDF,
+  exportProductionBatchesToExcel
+} from '../../utils/reportingExport';
 import {
   ResponsiveContainer,
   BarChart,
@@ -38,7 +43,9 @@ import {
   Sparkles,
   Layers,
   ArrowUpRight,
-  Gauge
+  Gauge,
+  FileText,
+  FileSpreadsheet
 } from 'lucide-react';
 
 interface ActiveBatch {
@@ -221,25 +228,44 @@ export const ProductionOverview: React.FC = () => {
             </div>
           </div>
 
-          {/* Time Window Switcher */}
-          <div className="flex items-center gap-1.5 bg-white/10 p-1.5 rounded-xl border border-white/10 text-xs self-start md:self-auto">
-            {[
-              { id: 'TODAY', label: 'Today (Live)' },
-              { id: '7DAYS', label: '7-Day Trend' },
-              { id: '30DAYS', label: '30-Day Trend' },
-            ].map((tw) => (
+          {/* Controls: Time Window & Exports */}
+          <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
+            <div className="flex items-center gap-2">
               <button
-                key={tw.id}
-                onClick={() => setTimeWindow(tw.id as any)}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
-                  timeWindow === tw.id
-                    ? 'bg-amber-500 text-slate-950 shadow-xs'
-                    : 'text-slate-300 hover:text-white hover:bg-white/10'
-                }`}
+                onClick={() => exportProductionBatchesToPDF(getProductionBatches())}
+                className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-1.5 border border-white/10 transition-all active:scale-95"
+                title="Exporter le rapport de production en PDF"
               >
-                {tw.label}
+                <FileText className="w-3.5 h-3.5 text-rose-400" /> PDF
               </button>
-            ))}
+              <button
+                onClick={() => exportProductionBatchesToExcel(getProductionBatches())}
+                className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-1.5 border border-white/10 transition-all active:scale-95"
+                title="Exporter les lots de production en Excel (.xlsx)"
+              >
+                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" /> Excel
+              </button>
+            </div>
+
+            <div className="flex items-center gap-1.5 bg-white/10 p-1.5 rounded-xl border border-white/10 text-xs">
+              {[
+                { id: 'TODAY', label: 'Today (Live)' },
+                { id: '7DAYS', label: '7-Day Trend' },
+                { id: '30DAYS', label: '30-Day Trend' },
+              ].map((tw) => (
+                <button
+                  key={tw.id}
+                  onClick={() => setTimeWindow(tw.id as any)}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+                    timeWindow === tw.id
+                      ? 'bg-amber-500 text-slate-950 shadow-xs'
+                      : 'text-slate-300 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  {tw.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>

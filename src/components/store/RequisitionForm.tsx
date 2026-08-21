@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { CATALOG_PRODUCTS } from '../../data/mockData';
 import { addRequisition, getActiveStore, notifyToast } from '../../services/storage';
 import { insertRequisitionToSupabase } from '../../services/supabaseService';
@@ -320,78 +321,87 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onSuccess }) =
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 bg-white">
-                  {items.map((item, index) => {
-                    const lineTotal = item.quantityRequested * item.unitEstimatedCost;
-                    return (
-                      <tr key={index} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="p-3 font-semibold text-slate-400">{index + 1}</td>
-                        <td className="p-3">
-                          <select
-                            value={item.productName}
-                            onChange={(e) => handleCatalogSelect(index, e.target.value)}
-                            className="w-full text-xs font-semibold text-slate-900 bg-white border border-slate-300 rounded-xl p-2.5 focus:ring-2 focus:ring-emerald-500 min-h-[44px]"
-                          >
-                            {CATALOG_PRODUCTS.map((prod) => (
-                              <option key={prod.name} value={prod.name}>
-                                {prod.name}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="p-3 text-slate-600 font-medium">
-                          <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                            {item.category}
-                          </span>
-                        </td>
-                        <td className="p-3">
-                          <div className="flex items-center gap-1 min-w-[130px]">
+                  <AnimatePresence initial={false}>
+                    {items.map((item, index) => {
+                      const lineTotal = item.quantityRequested * item.unitEstimatedCost;
+                      return (
+                        <motion.tr
+                          key={index}
+                          initial={{ opacity: 0, y: -6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.96 }}
+                          transition={{ duration: 0.2, ease: 'easeOut' }}
+                          className="hover:bg-slate-50/80 transition-colors"
+                        >
+                          <td className="p-3 font-semibold text-slate-400">{index + 1}</td>
+                          <td className="p-3">
+                            <select
+                              value={item.productName}
+                              onChange={(e) => handleCatalogSelect(index, e.target.value)}
+                              className="w-full text-xs font-semibold text-slate-900 bg-white border border-slate-300 rounded-xl p-2.5 focus:ring-2 focus:ring-emerald-500 min-h-[44px]"
+                            >
+                              {CATALOG_PRODUCTS.map((prod) => (
+                                <option key={prod.name} value={prod.name}>
+                                  {prod.name}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="p-3 text-slate-600 font-medium">
+                            <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                              {item.category}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            <div className="flex items-center gap-1 min-w-[130px]">
+                              <button
+                                type="button"
+                                onClick={() => handleQuantityChange(index, Math.max(1, item.quantityRequested - 5))}
+                                className="w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 flex items-center justify-center shrink-0 border border-slate-200 transition-colors touch-manipulation font-bold"
+                                title="-5"
+                              >
+                                <Minus className="w-3.5 h-3.5" />
+                              </button>
+                              <input
+                                type="number"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                min="1"
+                                value={item.quantityRequested}
+                                onChange={(e) => handleQuantityChange(index, parseInt(e.target.value) || 1)}
+                                className="w-full text-sm font-bold text-slate-900 bg-white border border-slate-300 rounded-lg p-2 text-center focus:ring-2 focus:ring-emerald-500 min-h-[40px]"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleQuantityChange(index, item.quantityRequested + 5)}
+                                className="w-9 h-9 rounded-lg bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-200 transition-colors touch-manipulation font-bold"
+                                title="+5"
+                              >
+                                <Plus className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                          <td className="p-3 font-medium text-slate-600">{item.unit}</td>
+                          <td className="p-3 text-right font-medium text-slate-600">
+                            {item.unitEstimatedCost.toFixed(2)} DZD
+                          </td>
+                          <td className="p-3 text-right font-bold text-slate-900">
+                            {lineTotal.toFixed(2)} DZD
+                          </td>
+                          <td className="p-3 text-center">
                             <button
                               type="button"
-                              onClick={() => handleQuantityChange(index, Math.max(1, item.quantityRequested - 5))}
-                              className="w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 flex items-center justify-center shrink-0 border border-slate-200 transition-colors touch-manipulation font-bold"
-                              title="-5"
+                              onClick={() => handleRemoveItem(index)}
+                              className="text-slate-400 hover:text-rose-600 p-1.5 hover:bg-rose-50 rounded-lg transition-colors"
+                              title="Supprimer la ligne"
                             >
-                              <Minus className="w-3.5 h-3.5" />
+                              <Trash2 className="w-4 h-4" />
                             </button>
-                            <input
-                              type="number"
-                              inputMode="numeric"
-                              pattern="[0-9]*"
-                              min="1"
-                              value={item.quantityRequested}
-                              onChange={(e) => handleQuantityChange(index, parseInt(e.target.value) || 1)}
-                              className="w-full text-sm font-bold text-slate-900 bg-white border border-slate-300 rounded-lg p-2 text-center focus:ring-2 focus:ring-emerald-500 min-h-[40px]"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleQuantityChange(index, item.quantityRequested + 5)}
-                              className="w-9 h-9 rounded-lg bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-200 transition-colors touch-manipulation font-bold"
-                              title="+5"
-                            >
-                              <Plus className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                        <td className="p-3 font-medium text-slate-600">{item.unit}</td>
-                        <td className="p-3 text-right font-medium text-slate-600">
-                          {item.unitEstimatedCost.toFixed(2)} DZD
-                        </td>
-                        <td className="p-3 text-right font-bold text-slate-900">
-                          {lineTotal.toFixed(2)} DZD
-                        </td>
-                        <td className="p-3 text-center">
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveItem(index)}
-                            className="text-slate-400 hover:text-rose-600 p-1.5 hover:bg-rose-50 rounded-lg transition-colors"
-                            title="Supprimer la ligne"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                          </td>
+                        </motion.tr>
+                      );
+                    })}
+                  </AnimatePresence>
                 </tbody>
               </table>
             </div>

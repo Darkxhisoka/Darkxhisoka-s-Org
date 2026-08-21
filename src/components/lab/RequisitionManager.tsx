@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   getRequisitions,
   getStores,
@@ -335,176 +336,201 @@ export const RequisitionManager: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-3">
-          {sorted.map((req) => {
-            const isExpanded = expandedId === req.id;
+          <AnimatePresence mode="popLayout">
+            {sorted.map((req, index) => {
+              const isExpanded = expandedId === req.id;
 
-            return (
-              <div
-                key={req.id}
-                className={`bg-white rounded-2xl border transition-all ${
-                  req.status === 'PENDING'
-                    ? 'border-amber-300 shadow-sm ring-1 ring-amber-200'
-                    : 'border-slate-200'
-                }`}
-              >
-                {/* Master Card Header */}
-                <div className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex items-start gap-4">
-                    <div className="p-3 rounded-xl bg-slate-100 text-slate-700 shrink-0 mt-0.5">
-                      <Building2 className="w-5 h-5 text-indigo-600" />
+              return (
+                <motion.div
+                  key={req.id}
+                  layout="position"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{
+                    duration: 0.24,
+                    delay: Math.min(index * 0.04, 0.28),
+                    ease: [0.22, 1, 0.36, 1]
+                  }}
+                  className={`bg-white rounded-2xl border transition-all ${
+                    req.status === 'PENDING'
+                      ? 'border-amber-300 shadow-sm ring-1 ring-amber-200'
+                      : 'border-slate-200'
+                  }`}
+                >
+                  {/* Master Card Header */}
+                  <div className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 rounded-xl bg-slate-100 text-slate-700 shrink-0 mt-0.5">
+                        <Building2 className="w-5 h-5 text-indigo-600" />
+                      </div>
+
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-sm text-slate-900">{req.requisitionNumber}</span>
+                          <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                            {req.storeName}
+                          </span>
+                          {getStatusBadge(req.status)}
+                        </div>
+
+                        <div className="flex items-center gap-3 text-xs text-slate-500 mt-1 flex-wrap">
+                          <span>Demandeur : <strong className="text-slate-700">{req.requestedBy}</strong></span>
+                          <span>•</span>
+                          <span>Demandé le : {req.dateRequested}</span>
+                          <span>•</span>
+                          <span className="text-indigo-700 font-semibold">Requis pour : {req.dateNeeded}</span>
+                        </div>
+                      </div>
                     </div>
 
-                    <div>
+                    {/* Actions & Price */}
+                    <div className="flex items-center justify-between md:justify-end gap-3 flex-wrap pt-3 md:pt-0 border-t md:border-t-0 border-slate-100">
+                      <div className="text-right mr-2">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Montant Est.</span>
+                        <span className="text-base font-black text-slate-900">{req.totalEstimatedCost.toFixed(2)} DZD</span>
+                      </div>
+
+                      {/* Stage Transition Action Buttons */}
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-bold text-sm text-slate-900">{req.requisitionNumber}</span>
-                        <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                          {req.storeName}
-                        </span>
-                        {getStatusBadge(req.status)}
-                      </div>
+                        {req.status === 'PENDING' && (
+                          <>
+                            <button
+                              onClick={() => handleStatusUpdate(req.id, 'APPROVED')}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-xs"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5" /> Approuver
+                            </button>
+                            <button
+                              onClick={() => handleOpenRejectModal(req.id)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 text-xs font-semibold transition-colors"
+                            >
+                              <XCircle className="w-3.5 h-3.5" /> Rejeter
+                            </button>
+                          </>
+                        )}
 
-                      <div className="flex items-center gap-3 text-xs text-slate-500 mt-1 flex-wrap">
-                        <span>Demandeur : <strong className="text-slate-700">{req.requestedBy}</strong></span>
-                        <span>•</span>
-                        <span>Demandé le : {req.dateRequested}</span>
-                        <span>•</span>
-                        <span className="text-indigo-700 font-semibold">Requis pour : {req.dateNeeded}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions & Price */}
-                  <div className="flex items-center justify-between md:justify-end gap-3 flex-wrap pt-3 md:pt-0 border-t md:border-t-0 border-slate-100">
-                    <div className="text-right mr-2">
-                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Montant Est.</span>
-                      <span className="text-base font-black text-slate-900">{req.totalEstimatedCost.toFixed(2)} DZD</span>
-                    </div>
-
-                    {/* Stage Transition Action Buttons */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {req.status === 'PENDING' && (
-                        <>
+                        {req.status === 'APPROVED' && (
                           <button
-                            onClick={() => handleStatusUpdate(req.id, 'APPROVED')}
+                            onClick={() => handleStatusUpdate(req.id, 'PROCESSING')}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-colors shadow-xs"
+                          >
+                            <Package className="w-3.5 h-3.5" /> Lancer la Cuisson / Prépa
+                          </button>
+                        )}
+
+                        {req.status === 'PROCESSING' && (
+                          <button
+                            onClick={() => handleStatusUpdate(req.id, 'DISPATCHED')}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition-colors shadow-xs"
+                          >
+                            <Truck className="w-3.5 h-3.5" /> Expédier la Livraison
+                          </button>
+                        )}
+
+                        {req.status === 'DISPATCHED' && (
+                          <button
+                            onClick={() => handleStatusUpdate(req.id, 'DELIVERED')}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-xs"
                           >
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Approuver
+                            <CheckCheck className="w-3.5 h-3.5" /> Marquer Livrée
                           </button>
-                          <button
-                            onClick={() => handleOpenRejectModal(req.id)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 text-xs font-semibold transition-colors"
-                          >
-                            <XCircle className="w-3.5 h-3.5" /> Rejeter
-                          </button>
-                        </>
-                      )}
+                        )}
 
-                      {req.status === 'APPROVED' && (
+                        {req.status !== 'REJECTED' && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => exportSingleRequisitionPDF(req)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-xs font-bold transition-colors shadow-2xs"
+                              title="Exporter le Bon de Réquisition Officiel en PDF"
+                            >
+                              <FileText className="w-3.5 h-3.5 text-indigo-600" /> PDF Bon
+                            </button>
+
+                            <button
+                              onClick={() => setSelectedPackingListReq(req)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold transition-colors shadow-2xs"
+                              title="Imprimer le bon de préparation"
+                            >
+                              <Printer className="w-3.5 h-3.5 text-amber-700" /> Bon de Colisage
+                            </button>
+                          </>
+                        )}
+
                         <button
-                          onClick={() => handleStatusUpdate(req.id, 'PROCESSING')}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-colors shadow-xs"
+                          onClick={() => setExpandedId(isExpanded ? null : req.id)}
+                          className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
                         >
-                          <Package className="w-3.5 h-3.5" /> Lancer la Cuisson / Prépa
+                          {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                         </button>
-                      )}
+                      </div>
+                    </div>
+                  </div>
 
-                      {req.status === 'PROCESSING' && (
-                        <button
-                          onClick={() => handleStatusUpdate(req.id, 'DISPATCHED')}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition-colors shadow-xs"
-                        >
-                          <Truck className="w-3.5 h-3.5" /> Expédier la Livraison
-                        </button>
-                      )}
-
-                      {req.status === 'DISPATCHED' && (
-                        <button
-                          onClick={() => handleStatusUpdate(req.id, 'DELIVERED')}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-xs"
-                        >
-                          <CheckCheck className="w-3.5 h-3.5" /> Marquer Livrée
-                        </button>
-                      )}
-
-                      {req.status !== 'REJECTED' && (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => exportSingleRequisitionPDF(req)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-xs font-bold transition-colors shadow-2xs"
-                            title="Exporter le Bon de Réquisition Officiel en PDF"
-                          >
-                            <FileText className="w-3.5 h-3.5 text-indigo-600" /> PDF Bon
-                          </button>
-
-                          <button
-                            onClick={() => setSelectedPackingListReq(req)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold transition-colors shadow-2xs"
-                            title="Imprimer le bon de préparation"
-                          >
-                            <Printer className="w-3.5 h-3.5 text-amber-700" /> Bon de Colisage
-                          </button>
-                        </>
-                      )}
-
-                      <button
-                        onClick={() => setExpandedId(isExpanded ? null : req.id)}
-                        className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                  {/* Expanded Details Section */}
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                        className="border-t border-slate-200 p-5 bg-slate-50/60 space-y-4 overflow-hidden"
                       >
-                        {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                        {req.notes && (
+                          <div className="text-xs text-amber-900 bg-amber-50 border border-amber-200 p-3 rounded-xl">
+                            <strong className="font-bold">Instructions Spéciales Magasin :</strong> {req.notes}
+                          </div>
+                        )}
 
-                {/* Expanded Details Section */}
-                {isExpanded && (
-                  <div className="border-t border-slate-200 p-5 bg-slate-50/60 space-y-4">
-                    {req.notes && (
-                      <div className="text-xs text-amber-900 bg-amber-50 border border-amber-200 p-3 rounded-xl">
-                        <strong className="font-bold">Instructions Spéciales Magasin :</strong> {req.notes}
-                      </div>
+                        {req.rejectionReason && (
+                          <div className="text-xs text-rose-900 bg-rose-50 border border-rose-200 p-3 rounded-xl">
+                            <strong className="font-bold">Motif du Rejet :</strong> {req.rejectionReason}
+                          </div>
+                        )}
+
+                        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                          <table className="w-full text-left text-xs">
+                            <thead>
+                              <tr className="bg-slate-100/80 text-slate-700 font-semibold border-b border-slate-200">
+                                <th className="p-2.5">Article</th>
+                                <th className="p-2.5">Catégorie</th>
+                                <th className="p-2.5 text-center">Qté Demandée</th>
+                                <th className="p-2.5 text-right">Coût Est./Unité</th>
+                                <th className="p-2.5 text-right">Total Ligne</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-200">
+                              {req.items.map((item, itemIdx) => (
+                                <motion.tr
+                                  key={item.id}
+                                  initial={{ opacity: 0, x: -6 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ duration: 0.2, delay: itemIdx * 0.03 }}
+                                  className="hover:bg-slate-50"
+                                >
+                                  <td className="p-2.5 font-bold text-slate-900">{item.productName}</td>
+                                  <td className="p-2.5 text-slate-500">{item.category}</td>
+                                  <td className="p-2.5 text-center font-bold text-slate-900">
+                                    {item.quantityRequested} {item.unit}
+                                  </td>
+                                  <td className="p-2.5 text-right text-slate-600">{item.unitEstimatedCost.toFixed(2)} DZD</td>
+                                  <td className="p-2.5 text-right font-bold text-slate-900">
+                                    {(item.quantityRequested * item.unitEstimatedCost).toFixed(2)} DZD
+                                  </td>
+                                </motion.tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </motion.div>
                     )}
-
-                    {req.rejectionReason && (
-                      <div className="text-xs text-rose-900 bg-rose-50 border border-rose-200 p-3 rounded-xl">
-                        <strong className="font-bold">Motif du Rejet :</strong> {req.rejectionReason}
-                      </div>
-                    )}
-
-                    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                      <table className="w-full text-left text-xs">
-                        <thead>
-                          <tr className="bg-slate-100/80 text-slate-700 font-semibold border-b border-slate-200">
-                            <th className="p-2.5">Article</th>
-                            <th className="p-2.5">Catégorie</th>
-                            <th className="p-2.5 text-center">Qté Demandée</th>
-                            <th className="p-2.5 text-right">Coût Est./Unité</th>
-                            <th className="p-2.5 text-right">Total Ligne</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-200">
-                          {req.items.map((item) => (
-                            <tr key={item.id} className="hover:bg-slate-50">
-                              <td className="p-2.5 font-bold text-slate-900">{item.productName}</td>
-                              <td className="p-2.5 text-slate-500">{item.category}</td>
-                              <td className="p-2.5 text-center font-bold text-slate-900">
-                                {item.quantityRequested} {item.unit}
-                              </td>
-                              <td className="p-2.5 text-right text-slate-600">{item.unitEstimatedCost.toFixed(2)} DZD</td>
-                              <td className="p-2.5 text-right font-bold text-slate-900">
-                                {(item.quantityRequested * item.unitEstimatedCost).toFixed(2)} DZD
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                  </AnimatePresence>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
         </div>
       )}
 

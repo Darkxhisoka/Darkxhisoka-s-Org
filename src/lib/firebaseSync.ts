@@ -1,4 +1,12 @@
-import { doc, setDoc, getDocs, collection } from 'firebase/firestore';
+import {
+  doc,
+  setDoc,
+  getDocs,
+  collection,
+  onSnapshot,
+  writeBatch,
+  Unsubscribe
+} from 'firebase/firestore';
 import { db, auth } from './firebase';
 
 export enum OperationType {
@@ -47,15 +55,40 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   console.error('Firestore Error: ', JSON.stringify(errInfo));
 }
 
+/**
+ * Sync a single document to Firestore
+ */
 export async function syncToFirestore(collectionName: string, docId: string, data: any) {
   try {
     const docRef = doc(db, collectionName, docId);
-    await setDoc(docRef, data, { merge: true });
+    await setDoc(docRef, { ...data, updatedAt: new Date().toISOString() }, { merge: true });
   } catch (err) {
     handleFirestoreError(err, OperationType.WRITE, `${collectionName}/${docId}`);
   }
 }
 
+/**
+ * Batch sync multiple documents to Firestore efficiently
+ */
+export async function batchSyncToFirestore(collectionName: string, items: { id: string; [key: string]: any }[]) {
+  if (!items || items.length === 0) return;
+  try {
+    const batch = writeBatch(db);
+    items.forEach((item) => {
+      if (item.id) {
+        const docRef = doc(db, collectionName, item.id);
+        batch.set(docRef, { ...item, updatedAt: new Date().toISOString() }, { merge: true });
+      }
+    });
+    await batch.commit();
+  } catch (err) {
+    handleFirestoreError(err, OperationType.WRITE, collectionName);
+  }
+}
+
+/**
+ * Fetch all documents from a Firestore collection
+ */
 export async function fetchCollectionFromFirestore<T>(collectionName: string): Promise<T[]> {
   try {
     const querySnapshot = await getDocs(collection(db, collectionName));
@@ -68,4 +101,27 @@ export async function fetchCollectionFromFirestore<T>(collectionName: string): P
     handleFirestoreError(err, OperationType.GET, collectionName);
     return [];
   }
+}
+
+/**
+ * Real-time listener for Firestore collection changes
+ */
+export function subscribeCollectionFromFirestore<T>(
+  collectionName: string,
+  onData: (items: T[]) => void
+): Unsubscribe {
+  const colRef = collection(db, collectionName);
+  return onSnapshot(
+    colRef,
+    (snapshot) => {
+      const items: T[] = [];
+      snapshot.forEach((docSnap) => {
+        items.push(docSnap.data() as T);
+      });
+      onData(items);
+    },
+    (error) => {
+      handleFirestoreError(error, OperationType.LIST, collectionName);
+    }
+  );
 }

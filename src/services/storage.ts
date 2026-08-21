@@ -484,6 +484,8 @@ export function saveRawMaterials(materials: RawMaterial[]) {
   });
 }
 
+export const setRawMaterials = saveRawMaterials;
+
 // Suppliers
 export function getSuppliers(): Supplier[] {
   initStorage();
@@ -2363,22 +2365,276 @@ export function savePurchaseOrder(po: PurchaseOrder): PurchaseOrder {
 }
 
 // ==========================================
-// 2. PRODUCTION BATCH STATUSES
+// 2. PRODUCTION BATCHES & SHEETS (FICHES DE PRODUCTION)
 // ==========================================
+const INITIAL_PRODUCTION_BATCHES: ProductionBatch[] = [
+  {
+    id: 'pb-001',
+    batchNumber: 'LOT-2026-0805-01',
+    recipeId: 'rec-1',
+    recipeName: 'Croissant Beurre AOP',
+    plannedQuantity: 120,
+    actualQuantity: 120,
+    unit: 'portions',
+    productionDate: '2026-08-05T05:30:00Z',
+    expiryDate: '2026-08-07T20:00:00Z',
+    supervisorName: 'Chef Antoine',
+    status: 'COMPLETED',
+    notes: 'Cuisson dorée optimale, texture feuilletée conforme.'
+  },
+  {
+    id: 'pb-002',
+    batchNumber: 'LOT-2026-0805-02',
+    recipeId: 'rec-2',
+    recipeName: 'Pain au Chocolat Pur Beurre',
+    plannedQuantity: 80,
+    actualQuantity: 80,
+    unit: 'portions',
+    productionDate: '2026-08-05T06:00:00Z',
+    expiryDate: '2026-08-07T20:00:00Z',
+    supervisorName: 'Chef Antoine',
+    status: 'COMPLETED',
+    notes: '2 barres chocolat Valrhona par unité.'
+  },
+  {
+    id: 'pb-003',
+    batchNumber: 'LOT-2026-0805-03',
+    recipeId: 'rec-3',
+    recipeName: 'Tartelette Citron Meringuée',
+    plannedQuantity: 45,
+    actualQuantity: 45,
+    unit: 'pièces',
+    productionDate: '2026-08-05T07:15:00Z',
+    expiryDate: '2026-08-06T20:00:00Z',
+    supervisorName: 'Chef Marie',
+    status: 'READY_FOR_PACKING',
+    notes: 'Meringue italienne dorée au chalumeau.'
+  },
+  {
+    id: 'pb-004',
+    batchNumber: 'LOT-2026-0805-04',
+    recipeId: 'rec-4',
+    recipeName: 'Éclair Chocolat Grand Cru',
+    plannedQuantity: 60,
+    unit: 'pièces',
+    productionDate: '2026-08-05T08:00:00Z',
+    expiryDate: '2026-08-06T20:00:00Z',
+    supervisorName: 'Chef Marie',
+    status: 'IN_PREPARATION',
+    notes: 'Glaçage miroir en cours.'
+  }
+];
+
+export function getProductionBatches(): ProductionBatch[] {
+  initStorage();
+  const data = localStorage.getItem(KEYS.PRODUCTION_BATCHES);
+  if (!data) {
+    localStorage.setItem(KEYS.PRODUCTION_BATCHES, JSON.stringify(INITIAL_PRODUCTION_BATCHES));
+    return INITIAL_PRODUCTION_BATCHES;
+  }
+  try {
+    const parsed = JSON.parse(data);
+    if (Array.isArray(parsed)) {
+      return parsed;
+    }
+    return INITIAL_PRODUCTION_BATCHES;
+  } catch {
+    return INITIAL_PRODUCTION_BATCHES;
+  }
+}
+
+export function setProductionBatches(batches: ProductionBatch[]) {
+  localStorage.setItem(KEYS.PRODUCTION_BATCHES, JSON.stringify(batches));
+  notifyListeners();
+}
+
+export function saveProductionBatch(batch: ProductionBatch): ProductionBatch {
+  const batches = getProductionBatches();
+  const existingIndex = batches.findIndex(b => b.id === batch.id || b.batchNumber === batch.batchNumber);
+  if (existingIndex !== -1) {
+    batches[existingIndex] = { ...batches[existingIndex], ...batch, updatedAt: new Date().toISOString() };
+  } else {
+    batches.unshift(batch);
+  }
+  setProductionBatches(batches);
+  return batch;
+}
+
+export interface BatchStockCheckResult {
+  hasSufficientStock: boolean;
+  ingredients: Array<{
+    materialId: string;
+    name: string;
+    needed: number;
+    currentStock: number;
+    unit: string;
+    isSufficient: boolean;
+    shortfall: number;
+  }>;
+}
+
+/**
+ * Calculate raw material requirements and sufficiency for a planned batch
+ */
+export function calculateRecipeStockRequirement(recipeId: string, plannedQuantity: number): BatchStockCheckResult {
+  initStorage();
+  const recipes = getRecipes();
+  const rawMaterials = getRawMaterials();
+  const recipe = recipes.find(r => r.id === recipeId);
+
+  if (!recipe || !recipe.ingredients) {
+    return { hasSufficientStock: true, ingredients: [] };
+  }
+
+  const yieldFactor = (recipe.yieldUnits && recipe.yieldUnits > 0) ? (plannedQuantity / recipe.yieldUnits) : plannedQuantity;
+  let allSufficient = true;
+  const ingredients: BatchStockCheckResult['ingredients'] = [];
+
+  recipe.ingredients.forEach(ing => {
+    if (ing.rawMaterialId) {
+      const mat = rawMaterials.find(m => m.id === ing.rawMaterialId);
+      if (mat) {
+        const needed = Number((ing.quantity * yieldFactor).toFixed(3));
+        const isSufficient = mat.currentStock >= needed;
+        if (!isSufficient) allSufficient = false;
+
+        ingredients.push({
+          materialId: mat.id,
+          name: mat.name,
+          needed,
+          currentStock: mat.currentStock,
+          unit: mat.unit,
+          isSufficient,
+          shortfall: isSufficient ? 0 : Number((needed - mat.currentStock).toFixed(3))
+        });
+      }
+    }
+  });
+
+  return {
+    hasSufficientStock: allSufficient,
+    ingredients
+  };
+}
+
+/**
+ * Automatically deducts required raw materials and registers a new Production Batch
+ */
+export function deductStockForProductionSheet(
+  recipeId: string,
+  plannedQuantity: number,
+  supervisorName: string = 'Chef Pâtissier',
+  notes?: string
+): { success: boolean; batch?: ProductionBatch; missingIngredients?: { name: string; needed: number; available: number; unit: string }[] } {
+  initStorage();
+  const recipes = getRecipes();
+  const rawMaterials = getRawMaterials();
+  const recipe = recipes.find(r => r.id === recipeId);
+
+  if (!recipe) {
+    return { success: false, missingIngredients: [] };
+  }
+
+  const check = calculateRecipeStockRequirement(recipeId, plannedQuantity);
+  if (!check.hasSufficientStock) {
+    const missing = check.ingredients
+      .filter(i => !i.isSufficient)
+      .map(i => ({
+        name: i.name,
+        needed: i.needed,
+        available: i.currentStock,
+        unit: i.unit
+      }));
+    return { success: false, missingIngredients: missing };
+  }
+
+  const yieldFactor = (recipe.yieldUnits && recipe.yieldUnits > 0) ? (plannedQuantity / recipe.yieldUnits) : plannedQuantity;
+  const deductions: { materialId: string; materialName: string; quantityDeducted: number; unit: string }[] = [];
+
+  // Atomic deduction from rawMaterials
+  recipe.ingredients.forEach(ing => {
+    if (ing.rawMaterialId) {
+      const mat = rawMaterials.find(m => m.id === ing.rawMaterialId);
+      if (mat) {
+        const totalNeeded = Number((ing.quantity * yieldFactor).toFixed(3));
+        mat.currentStock = Math.max(0, Number((mat.currentStock - totalNeeded).toFixed(3)));
+        deductions.push({
+          materialId: mat.id,
+          materialName: mat.name,
+          quantityDeducted: totalNeeded,
+          unit: mat.unit
+        });
+      }
+    }
+  });
+
+  saveRawMaterials(rawMaterials);
+
+  // Create new production batch
+  const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const existingBatches = getProductionBatches();
+  const seq = String(existingBatches.length + 1).padStart(2, '0');
+  const batchNumber = `LOT-${dateStr}-${seq}`;
+
+  const newBatch: ProductionBatch = {
+    id: `pb-${Date.now()}`,
+    batchNumber,
+    recipeId: recipe.id,
+    recipeName: recipe.name,
+    plannedQuantity,
+    actualQuantity: plannedQuantity,
+    unit: recipe.unitName || 'portions',
+    productionDate: new Date().toISOString(),
+    expiryDate: new Date(Date.now() + 48 * 3600 * 1000).toISOString(),
+    supervisorName,
+    status: 'IN_PREPARATION',
+    notes: notes || `Production de ${plannedQuantity} ${recipe.unitName || 'portions'} lancée. Stock matières déduit automatiquement.`,
+    ingredientsUsed: deductions
+  };
+
+  existingBatches.unshift(newBatch);
+  setProductionBatches(existingBatches);
+
+  // Add activity log
+  addActivityLog({
+    type: 'SEMI_FINISHED_PRODUCED',
+    title: `🧑‍🍳 Fiche de Production Validée : ${recipe.name}`,
+    description: `Fabrication du lot ${batchNumber} (${plannedQuantity} ${recipe.unitName || 'portions'}). ${deductions.length} ingrédients déduits automatiquement des stocks.`,
+    actor: supervisorName,
+    badgeText: 'PRODUCTION',
+    severity: 'success'
+  });
+
+  notifyToast({
+    type: 'success',
+    title: 'Production Lancée & Stock Déduit',
+    message: `Lot ${batchNumber} généré. ${deductions.length} matières premières déduites en temps réel.`
+  });
+
+  notifyListeners();
+  return { success: true, batch: newBatch };
+}
+
 export interface SavedBatchStatusMap {
-  [batchKey: string]: BatchStatus; // "productName_batchNumber" -> status
+  [batchKey: string]: BatchStatus;
 }
 
 export function getProductionBatchStatuses(): SavedBatchStatusMap {
-  const data = localStorage.getItem(KEYS.PRODUCTION_BATCHES);
-  return data ? JSON.parse(data) : {};
+  const batches = getProductionBatches();
+  const map: SavedBatchStatusMap = {};
+  batches.forEach(b => {
+    map[b.batchNumber] = b.status;
+  });
+  return map;
 }
 
 export function updateProductionBatchStatus(batchKey: string, status: BatchStatus) {
-  const map = getProductionBatchStatuses();
-  map[batchKey] = status;
-  localStorage.setItem(KEYS.PRODUCTION_BATCHES, JSON.stringify(map));
-  notifyListeners();
+  const batches = getProductionBatches();
+  const batch = batches.find(b => b.batchNumber === batchKey || b.id === batchKey);
+  if (batch) {
+    batch.status = status;
+    setProductionBatches(batches);
+  }
 }
 
 // ==========================================

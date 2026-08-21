@@ -19,6 +19,7 @@ import { RawMaterial, SemiFinishedStockItem, Recipe } from '../../types';
 import { BarcodeScannerModal } from '../common/BarcodeScannerModal';
 import { RawMaterialImporter } from './RawMaterialImporter';
 import { AddRawMaterialModal } from './AddRawMaterialModal';
+import { exportRawMaterialsToPDF, exportRawMaterialsToExcel } from '../../utils/reportingExport';
 import {
   Boxes,
   Search,
@@ -39,7 +40,9 @@ import {
   Barcode,
   FileSpreadsheet,
   Trash2,
-  Loader2
+  Loader2,
+  Download,
+  FileText
 } from 'lucide-react';
 
 export const InventoryList: React.FC = () => {
@@ -304,7 +307,23 @@ export const InventoryList: React.FC = () => {
         </div>
 
         {stockType === 'RAW_MATERIALS' && (
-          <div className="pr-2 flex items-center gap-2">
+          <div className="pr-2 flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => exportRawMaterialsToPDF(materials)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 rounded-lg shadow-xs transition-colors"
+              title="Exporter le rapport d'inventaire du stock en PDF"
+            >
+              <FileText className="w-4 h-4 text-rose-600" />
+              <span>Exporter PDF</span>
+            </button>
+            <button
+              onClick={() => exportRawMaterialsToExcel(materials)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 rounded-lg shadow-xs transition-colors"
+              title="Exporter le tableau d'inventaire du stock en format Excel (.xlsx)"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+              <span>Exporter Excel</span>
+            </button>
             <button
               onClick={() => setIsImporterOpen(true)}
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 active:bg-amber-300 rounded-lg shadow-xs transition-colors"

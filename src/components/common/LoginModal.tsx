@@ -54,22 +54,21 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const accountsList = [
-    { email: 'hakim@delice.com', name: 'Hakim (Central Lab)', pass: 'Admin@delice', defaultRole: 'CENTRAL_LAB' as UserRole, secret_role: 'LAB_EXECUTIVE_ADMIN' },
-    { email: 'hamza@delice.com', name: 'Hamza (Douera 01)', pass: 'Store@123456', defaultRole: 'RETAIL_STORE' as UserRole, secret_role: 'STORE_POS_OPERATOR', store_id: 'store-1' },
-    { email: 'billal@delice.com', name: 'Billal (Douera 02)', pass: 'Store@123456', defaultRole: 'RETAIL_STORE' as UserRole, secret_role: 'STORE_POS_OPERATOR', store_id: 'store-2' },
-    { email: 'ryad.ot@delice.com', name: 'Ryad (Oued Terfa)', pass: 'Store@123456', defaultRole: 'RETAIL_STORE' as UserRole, secret_role: 'STORE_POS_OPERATOR', store_id: 'store-3' },
-    { email: 'ryad.ea@delice.com', name: 'Ryad (El Achour)', pass: 'Store@123456', defaultRole: 'RETAIL_STORE' as UserRole, secret_role: 'STORE_POS_OPERATOR', store_id: 'store-4' },
-    { email: 'khaled@delice.com', name: 'Khaled (Blida)', pass: 'Store@123456', defaultRole: 'RETAIL_STORE' as UserRole, secret_role: 'STORE_POS_OPERATOR', store_id: 'store-5' },
-    { email: 'ahmed@delice.com', name: 'Ahmed (Boufarik)', pass: 'Store@123456', defaultRole: 'RETAIL_STORE' as UserRole, secret_role: 'STORE_POS_OPERATOR', store_id: 'store-6' },
+    { email: 'hakim@delice.com', name: 'Hakim (Central Lab)', defaultRole: 'CENTRAL_LAB' as UserRole, secret_role: 'LAB_EXECUTIVE_ADMIN' },
+    { email: 'hamza@delice.com', name: 'Hamza (Douera 01)', defaultRole: 'RETAIL_STORE' as UserRole, secret_role: 'STORE_POS_OPERATOR', store_id: 'store-1' },
+    { email: 'billal@delice.com', name: 'Billal (Douera 02)', defaultRole: 'RETAIL_STORE' as UserRole, secret_role: 'STORE_POS_OPERATOR', store_id: 'store-2' },
+    { email: 'ryad.ot@delice.com', name: 'Ryad (Oued Terfa)', defaultRole: 'RETAIL_STORE' as UserRole, secret_role: 'STORE_POS_OPERATOR', store_id: 'store-3' },
+    { email: 'ryad.ea@delice.com', name: 'Ryad (El Achour)', defaultRole: 'RETAIL_STORE' as UserRole, secret_role: 'STORE_POS_OPERATOR', store_id: 'store-4' },
+    { email: 'khaled@delice.com', name: 'Khaled (Blida)', defaultRole: 'RETAIL_STORE' as UserRole, secret_role: 'STORE_POS_OPERATOR', store_id: 'store-5' },
+    { email: 'ahmed@delice.com', name: 'Ahmed (Boufarik)', defaultRole: 'RETAIL_STORE' as UserRole, secret_role: 'STORE_POS_OPERATOR', store_id: 'store-6' },
   ];
 
-  // Auto-fill preset password on email selection or role change
   useEffect(() => {
-    const preset = accountsList.find(a => a.email === email);
-    if (preset && !password) {
-      setPassword(preset.pass);
+    if (isOpen) {
+      setPassword('');
+      setAuthError(null);
     }
-  }, [email, selectedStoreId, selectedRole, authMode, isOpen]);
+  }, [isOpen, authMode]);
 
   if (!isOpen) return null;
 
@@ -78,7 +77,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     setEmail(accEmail);
     setAuthError(null);
     if (account) {
-      setPassword(account.pass);
       setSelectedRole(account.defaultRole);
       setDisplayName(account.name);
     }
@@ -88,15 +86,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     setSelectedRole(role);
     setAuthError(null);
     if (role === 'CENTRAL_LAB') {
-      const preset = accountsList.find(a => a.email === 'hakim@delice.com');
       setEmail('hakim@delice.com');
       setDisplayName('Hakim (Central Lab)');
-      if (preset) setPassword(preset.pass);
     } else {
-      const preset = accountsList.find(a => a.email === 'hamza@delice.com');
       setEmail('hamza@delice.com');
       setDisplayName('Hamza (Douera 01)');
-      if (preset) setPassword(preset.pass);
     }
   };
 
@@ -108,7 +102,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     const secretRole = selectedRole === 'CENTRAL_LAB' ? 'LAB_EXECUTIVE_ADMIN' : 'STORE_POS_OPERATOR';
     const storeName = stores.find(s => s.id === selectedStoreId)?.name || '';
     const preset = accountsList.find(a => a.email === email.trim());
-    const effectivePassword = password.trim() || preset?.pass || 'Admin@delice';
+    const effectivePassword = password.trim();
 
     try {
       if (authMode === 'SIGN_IN') {
